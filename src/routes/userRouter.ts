@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request } from "express";
 import { loginUser, registerUser } from "../controllers/userController";
 
 import { IUser } from "../models/User";
@@ -6,7 +6,7 @@ import auth, { CustomRequest } from "../middleware/auth";
 
 const router = express.Router();
 
-router.post("/register", async (req: any, res: any) => {
+router.post("/register", async (req: Request, res: any) => {
   const userData: Partial<IUser> = {
     name: req.body.name,
     email: req.body.email,
@@ -21,7 +21,7 @@ router.post("/register", async (req: any, res: any) => {
   return res.status(201).json(registeredUser);
 });
 
-router.post("/login", async (req: any, res: any) => {
+router.post("/login", async (req: Request, res: any) => {
   const userData: Partial<IUser> = {
     email: req.body.email,
     password: req.body.password,

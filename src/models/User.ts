@@ -6,6 +6,13 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
+  image: string;
+  lastMessage: string;
+  unreadMessages: number;
+  lastMessageTime: string;
+  isOnline: boolean;
+  isLastMessageRead: boolean;
+  isImportant?: boolean;
   tokens: { token: string }[];
 }
 
@@ -26,6 +33,13 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
   email: { type: String, required: true },
   password: { type: String, required: true },
   tokens: [{ token: { type: String, required: true } }],
+  image: { type: String },
+  lastMessage: { type: String, default: "" },
+  unreadMessages: { type: Number, default: 0 },
+  lastMessageTime: { type: String, default: "" },
+  isOnline: { type: Boolean, default: false },
+  isLastMessageRead: { type: Boolean, default: false },
+  isImportant: { type: Boolean, default: false },
 });
 
 userSchema.pre("save", async function (next) {
