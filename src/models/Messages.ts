@@ -1,19 +1,34 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IMessage extends Document {
-  senderId: string;
-  receiverId: string;
-  content: string;
-  timestamp: Date;
-  isRead: boolean;
+  sender: string;
+  receiver: string;
+  chat: string;
+  message: string;
 }
 
-const MessageSchema: Schema = new Schema({
-  senderId: { type: String, required: true },
-  receiverId: { type: String, required: true },
-  content: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now },
-  isRead: { type: Boolean, default: false },
-});
+const MessageSchema: Schema = new Schema(
+  {
+    sender: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    receiver: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    chat: {
+      type: Schema.Types.ObjectId,
+      ref: "Chat",
+    },
+    message: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 export default mongoose.model<IMessage>("Message", MessageSchema);

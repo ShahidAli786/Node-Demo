@@ -7,13 +7,10 @@ export interface IUser extends Document {
   email: string;
   password: string;
   image: string;
-  lastMessage: string;
-  unreadMessages: number;
-  lastMessageTime: string;
   isOnline: boolean;
-  isLastMessageRead: boolean;
-  isImportant?: boolean;
   tokens: { token: string }[];
+  socketId?: string;
+  lastSeen?: string;
 }
 
 export interface IUserMethods {
@@ -28,19 +25,21 @@ interface UserModel extends Model<IUser, {}, IUserMethods> {
   ): Promise<HydratedDocument<IUser, IUserMethods>>;
 }
 
-const userSchema = new Schema<IUser, UserModel, IUserMethods>({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  password: { type: String, required: true },
-  tokens: [{ token: { type: String, required: true } }],
-  image: { type: String },
-  lastMessage: { type: String, default: "" },
-  unreadMessages: { type: Number, default: 0 },
-  lastMessageTime: { type: String, default: "" },
-  isOnline: { type: Boolean, default: false },
-  isLastMessageRead: { type: Boolean, default: false },
-  isImportant: { type: Boolean, default: false },
-});
+const userSchema = new Schema<IUser, UserModel, IUserMethods>(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    password: { type: String, required: true },
+    tokens: [{ token: { type: String, required: true } }],
+    image: { type: String, default: "https://fakeimg.pl/80x80" },
+    isOnline: { type: Boolean, default: false },
+    socketId: { type: String, default: "" },
+    lastSeen: { type: String, default: new Date().toISOString() },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
