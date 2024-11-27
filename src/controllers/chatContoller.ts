@@ -28,6 +28,64 @@ export const createChat = async (req: CustomRequest, res: any) => {
   return res.status(201).json(newChat);
 };
 
+// get chats based on type (all, important, unread, read)
+// add pagination
+export const getChatsTypes = async (req: CustomRequest, res: any) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
+  let chats;
+  switch (req.params.type) {
+    case "all":
+      chats = await Chat.find({ users: req.user?._id })
+        .populate("users")
+        .populate("lastMessage")
+        .skip(skip)
+        .limit(limit);
+      break;
+    case "important":
+      chats = await Chat.find({
+        users: req.user?._id,
+        importantBy: req.user?._id,
+      })
+        .populate("users")
+        .populate("lastMessage")
+        .skip(skip)
+        .limit(limit);
+      break;
+    case "unread":
+      chats = await Chat.find({
+        users: req.user?._id,
+        unreadCount: { $gt: 0 },
+      })
+        .populate("users")
+        .populate("lastMessage")
+        .skip(skip)
+        .limit(limit);
+      break;
+    case "read":
+      chats = await Chat.find({
+        users: req.user?._id,
+        unreadCount: 0,
+      })
+        .populate("users")
+        .populate("lastMessage")
+        .skip(skip)
+        .limit(limit);
+      break;
+    default:
+      return res.status(400).json({
+        error: "Invalid type",
+      });
+  }
+  const total = await Chat.countDocuments({ users: req.user?._id });
+  const totalPages = Math.ceil(total / limit);
+  return res.status(200).json({
+    chats,
+    totalPages,
+  });
+};
+
 export const getChats = async (req: CustomRequest, res: any) => {
   // add pagination
   const page = parseInt(req.query.page as string) || 1;
@@ -61,5 +119,44 @@ export const getChatMessages = async (req: CustomRequest, res: any) => {
     .limit(limit);
   return res.status(200).json({
     messages,
+  });
+};
+
+export const deleteChat = async (req: CustomRequest, res: any) => {
+  const chat = await Chat.findOneAndDelete({ _id: req.params.id });
+  if (!chat) {
+    return res.status(404).json({
+      error: "Chat not found",
+    });
+  }
+  return res.status(200).json({
+    message: "Chat deleted successfully",
+  });
+};
+
+export const markAsImportant = async (req: CustomRequest, res: any) => {
+  // if user exists in chat users array then remove it from importantBy array
+  const chat = await Chat.findById(req.params.id);
+  if (!chat) {
+    return res.status(404).json({
+      error: "Chat not found",
+    });
+  }
+
+  const userIndex = chat.importantBy.indexOf(req?.user?._id as string);
+  if (userIndex > -1) {
+    chat.importantBy.splice(userIndex, 1);
+  } else {
+    chat.importantBy.push(req?.user?._id as string);
+  }
+
+  await chat.save();
+  if (!chat) {
+    return res.status(404).json({
+      error: "Chat not found",
+    });
+  }
+  return res.status(200).json({
+    message: "Chat marked as important",
   });
 };
